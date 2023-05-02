@@ -13,6 +13,7 @@ static lv_color_t buf[ screenWidth * 10 ];
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
 
+
 /* Display flushing */
 void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p )
 {
