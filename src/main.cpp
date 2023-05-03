@@ -12,7 +12,7 @@ static lv_color_t buf[ screenWidth * 10 ];
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
-
+int currentPrice = 9;
 
 /* Display flushing */
 void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p )
@@ -56,11 +56,84 @@ void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * data )
  
 }
 
+void load_qr_code(int price)
+{
+    /* Create an image object */
+    lv_obj_t *img1 = lv_img_create( lv_scr_act() );
+    
+    // AUTOGEN
+    switch (price)
+    {
+    case 900:
+        LV_IMG_DECLARE(qr00900);
+        lv_img_set_src(img1, &qr00900);
+        break;
+    case 1600:
+        LV_IMG_DECLARE(qr01600);
+        lv_img_set_src(img1, &qr01600);
+        break;
+    default:
+        LV_IMG_DECLARE(qrcode);
+        lv_img_set_src(img1, &qrcode);
+        break;
+    }
+}
+
+void draw()
+{
+
+    // Create Price Label
+    String price_label = String(currentPrice) + ".00 CHF";
+    
+    static lv_style_t style_price;
+    lv_style_init(&style_price);
+    lv_style_set_text_font(&style_price, &lv_font_montserrat_32);
+    lv_style_set_text_color(&style_price, lv_color_hex(0xFFFFFF));
+    lv_style_set_bg_color(&style_price, lv_color_hex(0x1156a5));
+    lv_style_set_pad_all(&style_price, 10);
+    lv_style_set_bg_opa(&style_price, LV_OPA_100);
+
+    lv_obj_t *label = lv_label_create( lv_scr_act() );
+    lv_label_set_text( label, price_label.c_str() );
+    lv_obj_align( label, LV_ALIGN_CENTER, 0, 130 );
+    lv_obj_add_style(label, &style_price, 0);
+
+    // Create Store Name Label
+    String store_name = "Pumpkings";
+    static lv_style_t style_store;
+    lv_style_init(&style_store);
+    lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
+    lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
+
+    lv_obj_t *label_store = lv_label_create( lv_scr_act() );
+    lv_label_set_text( label_store, store_name.c_str() );
+    lv_obj_align( label_store, LV_ALIGN_CENTER, 0, 200 );
+    lv_obj_add_style(label_store, &style_store, 0);
+
+
+    // switch case loading image
+    switch (currentPrice)
+    {
+    case 9:
+        LV_IMG_DECLARE(qr09);
+        lv_img_set_src(img1, &qr09);
+        break;
+    case 16:
+        LV_IMG_DECLARE(qr16);
+        lv_img_set_src(img1, &qr16);
+        break;
+    default:
+        LV_IMG_DECLARE(qrcode);
+        lv_img_set_src(img1, &qrcode);
+        break;
+    }
+
+}
+
+
 void setup()
 {
     Serial.begin( 115200 ); /* prepare for possible serial debug */
-
-
 
     lv_init();
 
@@ -93,40 +166,7 @@ void setup()
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register( &indev_drv );
 
-
-    // Create Price Label
-    String price_label = "16.00 CHF";
-    
-    static lv_style_t style_price;
-    lv_style_init(&style_price);
-    lv_style_set_text_font(&style_price, &lv_font_montserrat_32);
-    lv_style_set_text_color(&style_price, lv_color_hex(0xFFFFFF));
-    lv_style_set_bg_color(&style_price, lv_color_hex(0x1156a5));
-    lv_style_set_pad_all(&style_price, 10);
-    lv_style_set_bg_opa(&style_price, LV_OPA_100);
-
-    lv_obj_t *label = lv_label_create( lv_scr_act() );
-    lv_label_set_text( label, price_label.c_str() );
-    lv_obj_align( label, LV_ALIGN_CENTER, 0, 130 );
-    lv_obj_add_style(label, &style_price, 0);
-
-    // Create Store Name Label
-    String store_name = "Pumpkings";
-    static lv_style_t style_store;
-    lv_style_init(&style_store);
-    lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
-    lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
-
-    lv_obj_t *label_store = lv_label_create( lv_scr_act() );
-    lv_label_set_text( label_store, store_name.c_str() );
-    lv_obj_align( label_store, LV_ALIGN_CENTER, 0, 200 );
-    lv_obj_add_style(label_store, &style_store, 0);
-
-    /* Create an image object */
-    lv_obj_t *img1 = lv_img_create( lv_scr_act() );
-    LV_IMG_DECLARE(qrcode);
-    lv_img_set_src(img1, &qrcode);
-
+    draw();
 
     Serial.println( "Setup done" );
 }
@@ -135,4 +175,5 @@ void loop()
 {
     lv_timer_handler(); /* let the GUI do its work */
     delay( 5 );
+
 }
