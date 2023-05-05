@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include <TFT_eSPI.h>
+#include <Wire.h>
 
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 320;
@@ -11,7 +12,8 @@ static lv_color_t buf[screenWidth * 10];
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
-int currentPrice = 9;
+float nextPrice = 9;
+float currentPrice = 9;
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -27,32 +29,6 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     lv_disp_flush_ready(disp);
 }
 
-/*Read the touchpad*/
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
-{
-    uint16_t touchX, touchY;
-
-    bool touched = tft.getTouch(&touchX, &touchY, 600);
-
-    if (!touched)
-    {
-        data->state = LV_INDEV_STATE_REL;
-    }
-    else
-    {
-        data->state = LV_INDEV_STATE_PR;
-
-        /*Set the coordinates*/
-        data->point.x = touchX;
-        data->point.y = touchY;
-
-        Serial.print("Data x ");
-        Serial.println(touchX);
-
-        Serial.print("Data y ");
-        Serial.println(touchY);
-    }
-}
 
 void load_qr_code(float price)
 {
@@ -77,7 +53,7 @@ void draw()
 {
 
     // Create Price Label
-    String price_label = String(currentPrice) + ".00 CHF";
+    String price_label = String(currentPrice) + " CHF";
 
     static lv_style_t style_price;
     lv_style_init(&style_price);
@@ -105,8 +81,22 @@ void draw()
     lv_obj_add_style(label_store, &style_store, 0);
 
     // Create QR Code
-    float price = (float)currentPrice;
-    load_qr_code(price);
+    load_qr_code(currentPrice);
+}
+
+void clean_all_objects()
+{
+    lv_obj_clean(lv_scr_act());
+}
+
+void receiveEvent(int bytesReceived) {
+  float value;
+  if (bytesReceived == sizeof(value)) {
+    Wire.readBytes((uint8_t*)&value, bytesReceived);
+    Serial.print("Received value: ");
+    Serial.println(value);
+    nextPrice = value;
+  }
 }
 
 void setup()
@@ -136,12 +126,10 @@ void setup()
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
-    /*Initialize the (dummy) input device driver*/
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = my_touchpad_read;
-    lv_indev_drv_register(&indev_drv);
+    // Initialize Serial Communication
+    uint8_t address = 0x08;
+    Wire.begin(address); // address of this ESP32
+    Wire.onReceive(receiveEvent);
 
     draw();
 
@@ -152,4 +140,12 @@ void loop()
 {
     lv_timer_handler(); /* let the GUI do its work */
     delay(5);
+
+    // Redraw if price has changed
+    if (nextPrice != currentPrice)
+    {
+        currentPrice = nextPrice;
+        clean_all_objects();
+        draw();
+    }
 }

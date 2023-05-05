@@ -29,8 +29,9 @@ def convert_pdf_to_png(pdf_file_path):
     x1, y1, x2, y2 = 136, 850, 545, 1261
     image = image.crop((x1, y1, x2, y2))
 
-    # resize image to 320x320
-    image = image.resize((320, 320), Image.ANTIALIAS)
+    # resize image to 320x320 and convert to black and white
+    image = image.resize((320, 320), Image.NEAREST)
+    image = image.convert('1')
 
     # Save Image
     value = int(value * 100)
@@ -39,11 +40,10 @@ def convert_pdf_to_png(pdf_file_path):
     print(f'{file_name} saved')
     return file_name
 
-
 def main():
 
     # Delete old binary and image files
-    delete_files(cpp_source_dir, 'bin')
+    delete_files(cpp_source_dir, 'c')
     delete_files(img_dest_dir, 'png')
 
     # Convert PDFs to PNGs and save them in the image directory
@@ -55,7 +55,8 @@ def main():
     # Run the image to binary converter
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     os.chdir('./lvgl_image_converter')
-    os.system('python3 lv_img_conv.py -f true_color_alpha -cf RGB888 -ff BIN -o ../../src -r ./images')
+    #os.system('python3 lv_img_conv.py -f indexed_8 -ff C -o ../../src -r ./images')
+    os.system('python3 lv_img_conv.py -f indexed_4 -cf RGB332 -ff C -o ../../src -r ./images')
 
     # Replace the switch statement in the CPP main file
     new_function = '''void load_qr_code(float price)
@@ -94,8 +95,12 @@ def main():
         # Save the modified CPP file
         with open(cpp_file_path, "w") as f:
             f.write(file_contents)
+        
+        print(f"Function {function_name} replaced in main.cpp")
     else:
         print("Function not found in file.")
+
+    print("Done")
 
 
 if __name__ == "__main__":
