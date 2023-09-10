@@ -3,6 +3,7 @@
 #include <TFT_eSPI.h>
 #include <Wire.h>
 
+
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 480;
@@ -14,6 +15,11 @@ TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
 float nextPrice = 9;
 float currentPrice = 9;
+
+LV_IMG_DECLARE(qr01600);
+LV_IMG_DECLARE(qr00900);
+
+lv_obj_t *img1;
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -32,21 +38,25 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 
 void load_qr_code(float price)
 {
+
+
     /* Create an image object */
-    lv_obj_t *img1 = lv_img_create( lv_scr_act() );
+    
+    // delete all objects from screen
+    static lv_obj_t *img1 = lv_img_create(lv_scr_act());
+    static lv_obj_t *img2 = lv_img_create(lv_scr_act());
     int price_switch = (int)(price*100);
     switch (price_switch)
     {
     case 1600:
-        LV_IMG_DECLARE(qr01600);
         lv_img_set_src(img1, &qr01600);
         break;
     case 900:
-        LV_IMG_DECLARE(qr00900);
         lv_img_set_src(img1, &qr00900);
         break;
-
     }
+
+
 }
 
 void draw()
@@ -63,7 +73,7 @@ void draw()
     lv_style_set_pad_all(&style_price, 10);
     lv_style_set_bg_opa(&style_price, LV_OPA_100);
 
-    lv_obj_t *label = lv_label_create(lv_scr_act());
+    static lv_obj_t *label = lv_label_create(lv_scr_act());
     lv_label_set_text(label, price_label.c_str());
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 130);
     lv_obj_add_style(label, &style_price, 0);
@@ -86,7 +96,10 @@ void draw()
 
 void clean_all_objects()
 {
+    
+    // Delete all objects
     lv_obj_clean(lv_scr_act());
+
 }
 
 void receiveEvent(int bytesReceived) {
@@ -133,7 +146,15 @@ void setup()
 
     draw();
 
-    Serial.println("Setup done");
+    // Check initial free_size:
+
+}
+void print_free_size(){
+
+    lv_mem_monitor_t mem_mon;
+    lv_mem_monitor(&mem_mon);
+    Serial.print("free_size = ");
+    Serial.println(mem_mon.free_size);
 }
 
 void loop()
@@ -144,6 +165,9 @@ void loop()
     // Redraw if price has changed
     if (nextPrice != currentPrice)
     {
+
+        //print_free_size();
+
         currentPrice = nextPrice;
         clean_all_objects();
         draw();
