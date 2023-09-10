@@ -19,7 +19,9 @@ float currentPrice = 9;
 LV_IMG_DECLARE(qr01600);
 LV_IMG_DECLARE(qr00900);
 
-lv_obj_t *img1;
+static lv_style_t style_price;
+static lv_style_t style_store;
+
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -35,33 +37,8 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     lv_disp_flush_ready(disp);
 }
 
-
-void load_qr_code(float price)
+void init_styles()
 {
-    /* Create an image object */
-    lv_obj_t *img1 = lv_img_create( lv_scr_act() );
-    int price_switch = (int)(price*100);
-    switch (price_switch)
-    {
-    case 1600:
-        //LV_IMG_DECLARE(qr01600);
-        lv_img_set_src(img1, &qr01600);
-        break;
-    case 900:
-        //LV_IMG_DECLARE(qr00900);
-        lv_img_set_src(img1, &qr00900);
-        break;
-
-    }
-}
-
-void draw()
-{
-
-    // Create Price Label
-    String price_label = String(currentPrice) + " CHF";
-
-    static lv_style_t style_price;
     lv_style_init(&style_price);
     lv_style_set_text_font(&style_price, &lv_font_montserrat_32);
     lv_style_set_text_color(&style_price, lv_color_hex(0xFFFFFF));
@@ -69,19 +46,68 @@ void draw()
     lv_style_set_pad_all(&style_price, 10);
     lv_style_set_bg_opa(&style_price, LV_OPA_100);
 
-    static lv_obj_t *label = lv_label_create(lv_scr_act());
+    lv_style_init(&style_store);
+    lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
+    lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
+}
+
+void load_qr_code(float price)
+{
+    /* Create a static image object */
+    static lv_obj_t* img1 = NULL;
+
+    /* Clean up the memory from the previous image */
+    if (img1 != NULL)
+    {
+        lv_obj_del(img1);
+        img1 = NULL; // Reset the pointer to NULL
+    }
+
+    /* Create a new image object */
+    img1 = lv_img_create(lv_scr_act());
+    int price_switch = (int)(price * 100);
+    switch (price_switch)
+    {
+    case 1600:
+        lv_img_set_src(img1, &qr01600);
+        break;
+    case 900:
+        lv_img_set_src(img1, &qr00900);
+        break;
+    }
+}
+
+void draw()
+{
+    // Create Price Label
+    String price_label = String(currentPrice) + " CHF";
+
+    static lv_obj_t *label = NULL;
+
+    // Clean up the memory from the previous label
+    if (label != NULL)
+    {
+        lv_obj_del(label);
+        label = NULL; // Reset the pointer to NULL
+    }
+    label = lv_label_create(lv_scr_act());
+
     lv_label_set_text(label, price_label.c_str());
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 130);
     lv_obj_add_style(label, &style_price, 0);
 
     // Create Store Name Label
     String store_name = "Pumpkings";
-    static lv_style_t style_store;
-    lv_style_init(&style_store);
-    lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
-    lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
+    static lv_obj_t *label_store = NULL;
 
-    lv_obj_t *label_store = lv_label_create(lv_scr_act());
+    // Clean up the memory from the previous label
+    if (label_store != NULL)
+    {
+        lv_obj_del(label_store);
+        label_store = NULL; // Reset the pointer to NULL
+    }
+    label_store = lv_label_create(lv_scr_act());
+
     lv_label_set_text(label_store, store_name.c_str());
     lv_obj_align(label_store, LV_ALIGN_CENTER, 0, 200);
     lv_obj_add_style(label_store, &style_store, 0);
@@ -140,6 +166,8 @@ void setup()
     uint8_t address = 0x08;
     Wire.begin(address); // address of this ESP32
     Wire.onReceive(receiveEvent);
+
+    init_styles();
 
     draw();
 
