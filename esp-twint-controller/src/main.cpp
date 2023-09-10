@@ -14,7 +14,7 @@ void loop() {
   Wire.beginTransmission(address);
   Wire.write((uint8_t*)&value, sizeof(value));
   Wire.endTransmission();
-  delay(500); 
+  delay(5000); 
 
   if (value == 9) {
     value = 16;

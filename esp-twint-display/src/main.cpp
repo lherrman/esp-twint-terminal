@@ -38,25 +38,21 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 
 void load_qr_code(float price)
 {
-
-
     /* Create an image object */
-    
-    // delete all objects from screen
-    static lv_obj_t *img1 = lv_img_create(lv_scr_act());
-    static lv_obj_t *img2 = lv_img_create(lv_scr_act());
+    lv_obj_t *img1 = lv_img_create( lv_scr_act() );
     int price_switch = (int)(price*100);
     switch (price_switch)
     {
     case 1600:
+        //LV_IMG_DECLARE(qr01600);
         lv_img_set_src(img1, &qr01600);
         break;
     case 900:
+        //LV_IMG_DECLARE(qr00900);
         lv_img_set_src(img1, &qr00900);
         break;
+
     }
-
-
 }
 
 void draw()
@@ -115,6 +111,7 @@ void receiveEvent(int bytesReceived) {
 void setup()
 {
     Serial.begin(115200); /* prepare for possible serial debug */
+    Serial.println("Starting...");
 
     lv_init();
 
@@ -124,7 +121,7 @@ void setup()
     /*Set the touchscreen calibration data,
      the actual data for your display can be acquired using
      the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-    uint16_t calData[5] = {275, 3620, 264, 3532, 1};
+    //uint16_t calData[5] = {275, 3620, 264, 3532, 1};
     // tft.setTouch( calData );
 
     lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
@@ -161,15 +158,14 @@ void loop()
 {
     lv_timer_handler(); /* let the GUI do its work */
     delay(5);
-
     // Redraw if price has changed
     if (nextPrice != currentPrice)
     {
 
-        //print_free_size();
+        print_free_size();
 
         currentPrice = nextPrice;
-        clean_all_objects();
+        //clean_all_objects();
         draw();
     }
 }
