@@ -1,5 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./qr-code-extractor/lvgl_image_converter"
-    ]
-}
