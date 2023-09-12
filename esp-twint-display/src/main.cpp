@@ -74,14 +74,28 @@ void load_qr_code(float price)
     case 900:
         lv_img_set_src(img1, &qr00900);
         break;
+    default:
+        lv_img_set_src(img1, &qr01600);
+        break;
     }
 }
 
 void draw()
 {
     // Create Price Label
-    String price_label = String(currentPrice) + " CHF";
-
+    // String price_label;
+  
+  
+    String price_label;
+    if (currentPrice == 0)
+    {
+        price_label = "Twint";
+    }
+    else
+    {
+        price_label  = String(currentPrice) + " CHF";
+    }
+ 
     static lv_obj_t *label = NULL;
 
     // Clean up the memory from the previous label
@@ -95,6 +109,7 @@ void draw()
     lv_label_set_text(label, price_label.c_str());
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 130);
     lv_obj_add_style(label, &style_price, 0);
+    
 
     // Create Store Name Label
     String store_name = "Pumpkings";
@@ -185,7 +200,7 @@ void print_free_size(){
 void loop()
 {
     lv_timer_handler(); /* let the GUI do its work */
-    delay(5);
+    //delay(5);
     // Redraw if price has changed
     if (nextPrice != currentPrice)
     {
