@@ -51,14 +51,12 @@ class Controller {
                 }
                 else if (key == '#')
                 {
-                    state = State::ENTERING_VALUE;
                 }
                 else
                 {
                     input_buffer = key;
                     state = State::ENTERING_VALUE;
                 }
-                value = 0.0;
             }
             else if (state == State::ENTERING_VALUE)
             {
@@ -110,6 +108,7 @@ class Controller {
         {
             if (state == State::IDLE_SHOW_DEFAULT)
             {
+                value = 0;
                 disp.setBrightness(1);
                 idle_animation();
             }
