@@ -177,7 +177,7 @@ class Controller {
                     }
                     else if (settings_menu_index == 2)
                     {
-                        setting_2_Animation = settings_selctor_index;
+                        setting_2_show_default = settings_selctor_index;
                     }
 
                     state = State::SETTINGS_MENU;
@@ -246,8 +246,8 @@ class Controller {
                     disp.display("1 Br");
                     break;
                 case 2:
-                    // Idle animation
-                    disp.display("2 An"); // Still need to implement
+                    // show default qr code
+                    disp.display("2 df"); // Still need to implement (transmission and display)
                     break;
                 }
             }
@@ -333,8 +333,13 @@ class Controller {
                     break;
                 }
                 case 2:{
-                    // Idle animation
+                    // Show default qr code
 
+                    // On Entry
+                    if (last_state != State::INSIDE_SETTING)
+                    {
+                        settings_selctor_index = setting_2_show_default;
+                    }
                     
                     // Clamp selector index
                     max_index = 1;
@@ -346,11 +351,11 @@ class Controller {
                     // Show options
                     if (settings_selctor_index == 0)
                     {
-                        disp.display("An 1");
+                        disp.display(" Off");
                     }
                     else if (settings_selctor_index == 1)
                     {
-                        disp.display("An 2");
+                        disp.display(" On ");
                     }
 
                     break;
@@ -391,8 +396,8 @@ class Controller {
         // Settings
         int setting_0_TimeAutoReset_index = 1; 
         int setting_0_values[5] = {30, 60, 120, 300, 0}; // seconds (0 = never)
-        int setting_2_Animation = 0; // 0 = none, 1 = animation 1, 2 = animation 2
         int setting_1_brightness = 5; // 1-7
+        int setting_2_show_default = 1; // 1= show default qr code, 0=don't show default qr code
 
         void setValue(String valueStrIn)
         {
