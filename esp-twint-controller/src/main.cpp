@@ -27,13 +27,14 @@ unsigned long current_time;
 
 TM1637 disp(19, 18);
 
-void sendValue(float valueOut, int setting_2_show_default = 1)
+void send_package(float valueOut, int setting_2_show_default = 1, int setting_3_dark_mode = 0)
 {
     Wire.beginTransmission(address);
 
     // create a package to send to the receiver with the value and a setting
-    uint8_t package[5];
+    uint8_t package[6];
     package[4] = (uint8_t)(setting_2_show_default); // setting
+    package[5] = (uint8_t)(setting_3_dark_mode); // setting
     memcpy(&package[0], &valueOut, sizeof(valueOut));
     Wire.write(package, sizeof(package));
     //Wire.write((uint8_t *)&valueOut, sizeof(valueOut));
@@ -132,7 +133,7 @@ class Controller {
             else if (state == State::SETTINGS_MENU)
             {
 
-                int MAX_SETTINGS_MENU_INDEX = 2;
+                int MAX_SETTINGS_MENU_INDEX = 3;
                 if (key ==  '2')
                 {
                     // UP
@@ -184,6 +185,10 @@ class Controller {
                     else if (settings_menu_index == 2)
                     {
                         setting_2_show_default = settings_selctor_index;
+                    }
+                    else if (settings_menu_index == 3)
+                    {
+                        setting_3_dark_mode = settings_selctor_index;
                     }
 
                     state = State::SETTINGS_MENU;
@@ -250,7 +255,11 @@ class Controller {
                     break;
                 case 2:
                     // show default qr code
-                    disp.display("2 df"); // Still need to implement (transmission and display)
+                    disp.display("2 Sd"); 
+                    break;
+                case 3:
+                    // dark mode
+                    disp.display("3 da");
                     break;
                 }
             }
@@ -341,7 +350,28 @@ class Controller {
                     {
                         disp.display(" On ");
                     }
+                    break;
+                }
+                case 3:{
+                    // Show dark mode
 
+                    // On Entry
+                    if (last_state != State::INSIDE_SETTING)
+                    {
+                        settings_selctor_index = setting_3_dark_mode;
+                    }
+                    
+                    clamp_settings_selctor_index(0, 1);    
+
+                    // Show options
+                    if (settings_selctor_index == 0)
+                    {
+                        disp.display(" Off");
+                    }
+                    else if (settings_selctor_index == 1)
+                    {
+                        disp.display(" On ");
+                    }
                     break;
                 }
             }
@@ -353,7 +383,7 @@ class Controller {
             static unsigned long last_time = 0;
             if (current_time - last_time > 500)
             {
-                sendValue(value, setting_2_show_default);
+                send_package(value, setting_2_show_default, setting_3_dark_mode);
                 last_time = current_time;
             }
         }
@@ -374,13 +404,15 @@ class Controller {
         // Settings menu
         int settings_menu_index = 0;
         int settings_selctor_index = 0;
-        int setting_menu_direction[3] = {-1, 1, 1}; // 1 = up, -1 = down
+        int setting_menu_direction[4] = {-1, 1, 1, 1}; // 1 = up, -1 = down
 
         // Settings
         int setting_0_TimeAutoReset_index = 1; 
         int setting_0_values[5] = {30, 60, 120, 300, 0}; // seconds (0 = never)
         int setting_1_brightness = 5; // 1-7
         int setting_2_show_default = 1; // 1= show default qr code, 0=don't show default qr code
+        int setting_3_dark_mode = 0; // 1= dark mode, 0=light mode
+
 
         void setValue(String valueStrIn)
         {

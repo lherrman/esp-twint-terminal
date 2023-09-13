@@ -16,19 +16,35 @@ static lv_color_t buf[screen_width * 10];
 
 static lv_style_t style_price;
 static lv_style_t style_store;
+static lv_style_t style_screen;
+static lv_style_t style_logo;
+static lv_style_t style_qr;
 
 static lv_obj_t *qr;
 static lv_obj_t *price_label;
 static lv_obj_t *store_label;
 static lv_obj_t *img_logo;
 
-LV_IMG_DECLARE(twint_logo);
+LV_IMG_DECLARE(logo_small);
+LV_IMG_DECLARE(logo_large);
 
-// State variables
+// Colors
+static lv_color_t color_bg_light = lv_color_hex(0xFFFFFF);
+static lv_color_t color_fg_light = lv_color_hex(0x000000);
+static lv_color_t color_bg_dark = lv_color_hex(0x000000);
+static lv_color_t color_fg_dark = lv_color_hex(0xFFFFFF);
+
+// Variables
 float next_price = 0;
 float current_price = 0;
 int setting_show_default_qr_code = 1;
 int setting_show_default_qr_code_old = 1;
+int setting_dark_mode = 0;
+int setting_dark_mode_old = 0;
+
+// Parameters
+int qr_code_size = 250;
+int qr_code_offset_top = 85;
 
 
 void display_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -56,18 +72,29 @@ void init_lv_objects()
 
     lv_style_init(&style_store);
     lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
-    lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
+    lv_style_set_text_color(&style_store, color_fg_light);
+
+    lv_style_init(&style_logo);
+    lv_style_set_clip_corner(&style_logo, true);
+    lv_style_set_radius(&style_logo, 5);
+
+    lv_style_init(&style_screen);
+    lv_style_set_bg_color(&style_screen, color_bg_light);
+
+    lv_style_init(&style_qr);
+    lv_style_set_border_opa(&style_qr, LV_OPA_0);
+
+    // Screen
+    lv_obj_add_style(lv_scr_act(), &style_screen, 0);
 
     // QR Code
-    lv_color_t bg_color = lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 5);
-    lv_color_t fg_color = lv_color_hex(0x000000);
-    qr = lv_qrcode_create(lv_scr_act(), 250, fg_color, bg_color);
-    lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, 80);
+    qr = lv_qrcode_create(lv_scr_act(), qr_code_size, color_fg_light, color_bg_light);
+    lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, qr_code_offset_top);
 
-    // Twint Logo
+    // Twint Logo (small and large)
     img_logo = lv_img_create(lv_scr_act());
-    lv_img_set_src(img_logo, &twint_logo);
-
+    lv_img_set_src(img_logo, &logo_small);
+    lv_obj_add_style(img_logo, &style_logo, 0);
 
     // Price Label
     price_label = lv_label_create(lv_scr_act());
@@ -81,6 +108,32 @@ void init_lv_objects()
     lv_obj_add_style(store_label, &style_store, 0);
     lv_label_set_text(store_label, store_name.c_str());
 
+}
+
+void set_dark_mode(bool enable)
+{
+    if (enable)
+    {
+        lv_style_set_bg_color(&style_screen, color_bg_dark);
+        lv_style_set_text_color(&style_store, color_fg_dark);
+
+        lv_obj_del(qr);
+        qr = lv_qrcode_create(lv_scr_act(), qr_code_size, color_fg_dark, color_bg_dark);
+        lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, qr_code_offset_top);
+
+        lv_obj_invalidate(lv_scr_act());
+    }
+    else
+    {
+        lv_style_set_bg_color(&style_screen, color_bg_light);
+        lv_style_set_text_color(&style_store, color_fg_light);
+
+        lv_obj_del(qr);
+        qr = lv_qrcode_create(lv_scr_act(), qr_code_size, color_fg_light, color_bg_light);
+        lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, qr_code_offset_top);
+
+        lv_obj_invalidate(lv_scr_act());
+    }
 }
 
 void update_qr_code()
@@ -103,9 +156,14 @@ void update_twint_logo()
     // Move and resize logo if price is 0 and setting is set to hide default QR code
     if ((setting_show_default_qr_code == 0) && (current_price == 0))
     {
-        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 10);}
+        lv_img_set_src(img_logo, &logo_large);
+        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 200);
+        lv_obj_set_style_radius(img_logo, LV_RADIUS_CIRCLE, 0);
+    }
     else{
-        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 80);
+        lv_img_set_src(img_logo, &logo_small);
+        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 10);
+        lv_obj_set_style_radius(img_logo, LV_RADIUS_CIRCLE, 0);
     }
 }
 
@@ -146,6 +204,7 @@ void update_store_label()
 void draw()
 {
     update_price_label();
+    update_twint_logo();
     update_store_label();
     update_qr_code();
 }
@@ -153,14 +212,15 @@ void draw()
 
 void receive_event(int bytes_received)
 {
-    // Data format: 4 bytes float + 1 byte setting_show_default_qr_code
-    uint8_t package[5];
+    // Data format: 4 bytes float + 1 byte setting_show_default_qr_code + 1 byte setting_dark_mode
+    uint8_t package[6];
     float value;
     if (bytes_received == sizeof(package))
     {
         Wire.readBytes((uint8_t *)&package, bytes_received);
 
         setting_show_default_qr_code = package[4];
+        setting_dark_mode = package[5];
         memcpy(&value, &package[0], sizeof(value));
 
         next_price = value;
@@ -198,6 +258,8 @@ void setup()
     // Initialize LVGL Objects
     init_lv_objects();
 
+    set_dark_mode(false);
+
     draw();
 }
 void print_free_memory()
@@ -208,17 +270,43 @@ void print_free_memory()
     Serial.println(mem_mon.free_size);
 }
 
+bool price_changed()
+{
+    // Monitor if value has changed to trigger redraw
+    if (next_price != current_price) 
+    {
+        current_price = next_price;
+        return true; }
+    else{
+        return false;
+    }
+}
+
+bool setting_changed()
+{
+    // Monitor if value has changed to trigger redraw
+    if ((setting_show_default_qr_code != setting_show_default_qr_code_old) ||
+        (setting_dark_mode != setting_dark_mode_old))
+    {
+        setting_show_default_qr_code_old = setting_show_default_qr_code;
+        setting_dark_mode_old = setting_dark_mode;
+        return true; }
+    else{
+        return false;
+    }
+}
+
 void loop()
 {
     lv_timer_handler();
 
-    // Handle screen updates
-    if ((next_price != current_price) ||
-        (setting_show_default_qr_code != setting_show_default_qr_code_old))
+    if (price_changed())
     {
-        current_price = next_price;
-        setting_show_default_qr_code_old = setting_show_default_qr_code;
-
+        draw();
+    }
+    if (setting_changed())
+    {
+        set_dark_mode(setting_dark_mode);
         draw();
     }
 }
