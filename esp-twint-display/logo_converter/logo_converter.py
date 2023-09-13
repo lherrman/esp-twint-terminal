@@ -23,7 +23,7 @@ def main():
 
     # Delete old binary and image files
     delete_files(lvgl_converter_image_dir, 'png')
-    delete_files(logo_destination_dir, 'bin')
+    delete_files(logo_destination_dir, 'c')
 
     source_image_files = glob.glob(logo_source_dir + '/*')
 
@@ -32,15 +32,23 @@ def main():
     if len(source_image_files) > 1:
         print('Warning: More than one image file found in source directory. Only the first file will be used.')
 
-    for file in source_image_files[:1]:
-        #shutil.copy(file, lvgl_converter_image_dir)
-        # rename file to logo.png using shutil.move()
-        shutil.copy(file, lvgl_converter_image_dir + '/twint_logo.png')
+    img_small = Image.open(source_image_files[0])
+    img_large = Image.open(source_image_files[0])
+
+    img_small.thumbnail((160, 160), Image.ANTIALIAS)
+    img_large.thumbnail((220, 220), Image.ANTIALIAS)
     
+    img_small.save(lvgl_converter_image_dir + '/logo_small.png')
+    img_large.save(lvgl_converter_image_dir + '/logo_large.png')
+
     # Run the image to binary converter
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     os.chdir('./lvgl_image_converter')
     subprocess.run(['python', 'lv_img_conv.py', '-f', 'indexed_8', '-cf', 'RGB332', '-ff', 'C', '-o', '../dest', '-r', './images'])
+
+    if input('Move generated files to src directory? [y/n]: ') == 'y':
+        shutil.move(logo_destination_dir + '/logo_small.c', parent_dir + '/src/logo_small.c')
+        shutil.move(logo_destination_dir + '/logo_large.c', parent_dir + '/src/logo_large.c')
 
 
 if __name__ == "__main__":
