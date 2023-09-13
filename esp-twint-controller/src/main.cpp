@@ -176,7 +176,7 @@ class Controller {
                     // Save settings
                     if (settings_menu_index == 0)
                     {
-                        setting_0_TimeAutoReset_index = settings_selctor_index;
+                        setting_0_time_auto_reset_index = settings_selctor_index;
                     }
                     else if (settings_menu_index == 1)
                     {
@@ -229,8 +229,8 @@ class Controller {
             {
 
                 // Reset to idle if set time has passed
-                if ((current_time - last_time_value_set > setting_0_values[setting_0_TimeAutoReset_index] * 1000)
-                    && (setting_0_values[setting_0_TimeAutoReset_index] != 0))
+                if ((current_time - last_time_value_set > setting_0_values[setting_0_time_auto_reset_index] * 1000)
+                    && (setting_0_values[setting_0_time_auto_reset_index] != 0))
                 {   
                     state = State::IDLE_SHOW_DEFAULT;
                 }
@@ -286,7 +286,7 @@ class Controller {
                     // On Entry
                     if (last_state != State::INSIDE_SETTING)
                     {
-                        settings_selctor_index = setting_0_TimeAutoReset_index;
+                        settings_selctor_index = setting_0_time_auto_reset_index;
                     }
 
                     // Clamp selector index
@@ -407,10 +407,10 @@ class Controller {
         int setting_menu_direction[4] = {-1, 1, 1, 1}; // 1 = up, -1 = down
 
         // Settings
-        int setting_0_TimeAutoReset_index = 1; 
+        int setting_0_time_auto_reset_index = 1; 
         int setting_0_values[5] = {30, 60, 120, 300, 0}; // seconds (0 = never)
         int setting_1_brightness = 5; // 1-7
-        int setting_2_show_default = 1; // 1= show default qr code, 0=don't show default qr code
+        int setting_2_show_default = 0; // 1= show default qr code, 0=don't show default qr code
         int setting_3_dark_mode = 0; // 1= dark mode, 0=light mode
 
 
