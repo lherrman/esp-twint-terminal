@@ -237,15 +237,16 @@ class Controller {
                 switch (settings_menu_index)
                 {
                 case 0:
-                    // Idle animation
-                    disp.display("0 RS");
+                    // Auto reset time
+                    disp.display("0 Ar");
                     break;
                 case 1:
-                    // Time auto reset
+                    // Idle animation
                     disp.display("1 An");
                     break;
                 case 2: 
-                    disp.display("2 Of");
+                    // Brightness
+                    disp.display("2 Br");
                     break;
                 }
             }

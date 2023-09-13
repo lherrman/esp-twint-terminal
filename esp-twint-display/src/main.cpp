@@ -23,7 +23,6 @@ static lv_style_t style_price;
 static lv_style_t style_store;
 
 
-/* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
     uint32_t w = (area->x2 - area->x1 + 1);
@@ -83,18 +82,11 @@ void load_qr_code(float price)
 void draw()
 {
     // Create Price Label
-    // String price_label;
-  
-  
     String price_label;
-    if (currentPrice == 0)
-    {
-        price_label = "Twint";
-    }
+    if (currentPrice == 0) 
+        { price_label = "Twint"; }
     else
-    {
-        price_label  = String(currentPrice) + " CHF";
-    }
+        { price_label  = String(currentPrice) + " CHF"; }
  
     static lv_obj_t *label = NULL;
 
@@ -159,18 +151,11 @@ void setup()
     tft.begin();        /* TFT init */
     tft.setRotation(0); /* Landscape orientation, flipped */
 
-    /*Set the touchscreen calibration data,
-     the actual data for your display can be acquired using
-     the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-    //uint16_t calData[5] = {275, 3620, 264, 3532, 1};
-    // tft.setTouch( calData );
-
     lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
 
     /*Initialize the display*/
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    /*Change the following line to your display resolution*/
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = my_disp_flush;
@@ -186,7 +171,7 @@ void setup()
 
     draw();
 
-    // Check initial free_size:
+    
 
 }
 void print_free_size(){
