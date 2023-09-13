@@ -3,6 +3,7 @@
 #include <TFT_eSPI.h>
 #include <Wire.h>
 
+#include "qrdata.h"
 
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 320;
@@ -16,8 +17,7 @@ TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 float nextPrice = 9;
 float currentPrice = 9;
 
-LV_IMG_DECLARE(qr01600);
-LV_IMG_DECLARE(qr00900);
+LV_IMG_DECLARE(twint_logo);
 
 static lv_style_t style_price;
 static lv_style_t style_store;
@@ -36,6 +36,8 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     lv_disp_flush_ready(disp);
 }
 
+
+
 void init_styles()
 {
     lv_style_init(&style_price);
@@ -48,46 +50,54 @@ void init_styles()
     lv_style_init(&style_store);
     lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
     lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
+
+
 }
 
-void load_qr_code(float price)
+void load_twint_logo()
 {
-    /* Create a static image object */
-    static lv_obj_t* img1 = NULL;
-
-    /* Clean up the memory from the previous image */
-    if (img1 != NULL)
+    /* Create an image object */
+    static lv_obj_t *img_logo = NULL;
+    if (img_logo != NULL)
     {
-        lv_obj_del(img1);
-        img1 = NULL; // Reset the pointer to NULL
+        lv_obj_del(img_logo);
+        img_logo = NULL; // Reset the pointer to NULL
     }
+    img_logo = lv_img_create( lv_scr_act() );
+    lv_img_set_src(img_logo, &twint_logo);
+    lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 10);
+}
 
-    /* Create a new image object */
-    img1 = lv_img_create(lv_scr_act());
-    int price_switch = (int)(price * 100);
-    switch (price_switch)
+
+void generate_qr_code(float price)
+{
+    lv_color_t bg_color = lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 5);
+    lv_color_t fg_color = lv_color_hex(0x000000);
+
+    static lv_obj_t * qr = NULL;
+    if (qr != NULL)
     {
-    case 1600:
-        lv_img_set_src(img1, &qr01600);
-        break;
-    case 900:
-        lv_img_set_src(img1, &qr00900);
-        break;
-    default:
-        lv_img_set_src(img1, &qr01600);
-        break;
+        lv_obj_del(qr);
+        qr = NULL; // Reset the pointer to NULL
     }
+    qr = lv_qrcode_create(lv_scr_act(), 250, fg_color, bg_color);
+    
+    /*Set data*/
+    const char * data = get_qr_data(price);
+
+    lv_qrcode_update(qr, data, strlen(data));
+    lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, 80);
+
+    /*Add a border with bg_color*/
+    lv_obj_set_style_border_color(qr, bg_color, 0);
+    lv_obj_set_style_border_width(qr, 5, 0);
 }
 
 void draw()
 {
     // Create Price Label
-    String price_label;
-    if (currentPrice == 0) 
-        { price_label = "Twint"; }
-    else
-        { price_label  = String(currentPrice) + " CHF"; }
- 
+    String price_label = String(currentPrice) + " CHF";
+    
     static lv_obj_t *label = NULL;
 
     // Clean up the memory from the previous label
@@ -96,13 +106,15 @@ void draw()
         lv_obj_del(label);
         label = NULL; // Reset the pointer to NULL
     }
-    label = lv_label_create(lv_scr_act());
 
-    lv_label_set_text(label, price_label.c_str());
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 130);
-    lv_obj_add_style(label, &style_price, 0);
+    if (currentPrice != 0) 
+    {
+        label = lv_label_create(lv_scr_act());
+        lv_label_set_text(label, price_label.c_str());
+        lv_obj_align(label, LV_ALIGN_CENTER, 0, 140);
+        lv_obj_add_style(label, &style_price, 0);
+    }    
     
-
     // Create Store Name Label
     String store_name = "Pumpkings";
     static lv_obj_t *label_store = NULL;
@@ -119,9 +131,10 @@ void draw()
     lv_obj_align(label_store, LV_ALIGN_CENTER, 0, 200);
     lv_obj_add_style(label_store, &style_store, 0);
 
-    // Create QR Code
-    load_qr_code(currentPrice);
-}
+    load_twint_logo();
+    generate_qr_code(currentPrice);
+
+ }
 
 void clean_all_objects()
 {
@@ -170,8 +183,6 @@ void setup()
     init_styles();
 
     draw();
-
-    
 
 }
 void print_free_size(){
