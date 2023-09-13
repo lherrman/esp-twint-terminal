@@ -14,8 +14,8 @@ static lv_color_t buf[screenWidth * 10];
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
-float nextPrice = 9;
-float currentPrice = 9;
+float nextPrice = 0;
+float currentPrice = 0;
 
 LV_IMG_DECLARE(twint_logo);
 
@@ -148,8 +148,8 @@ void receiveEvent(int bytesReceived) {
   float value;
   if (bytesReceived == sizeof(value)) {
     Wire.readBytes((uint8_t*)&value, bytesReceived);
-    Serial.print("Received value: ");
-    Serial.println(value);
+    // Serial.print("Received value: ");
+    // Serial.println(value);
     nextPrice = value;
   }
 }
