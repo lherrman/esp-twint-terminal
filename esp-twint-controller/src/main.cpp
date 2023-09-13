@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <Keypad.h>
 #include <TM1637.h>
+#include <EEPROM.h>
+
 
 float value = 9;
 uint8_t address = 8; // address of the receiver ESP32
@@ -52,6 +54,11 @@ enum class State
 
 class Controller {
     public:
+        Controller()
+        {
+            load_settings_from_eeprom();
+        }
+
         void keyLongPressed(char key)
         {
             if (key == '*')
@@ -190,6 +197,7 @@ class Controller {
                     {
                         setting_3_dark_mode = settings_selctor_index;
                     }
+                    save_settings_to_eeprom();
 
                     state = State::SETTINGS_MENU;
                 }
@@ -413,6 +421,49 @@ class Controller {
         int setting_2_show_default = 0; // 1= show default qr code, 0=don't show default qr code
         int setting_3_dark_mode = 0; // 1= dark mode, 0=light mode
 
+        void write_int_to_eeprom(int address, int value)
+        {
+            // Split the integer into 4 bytes
+            byte four = (value & 0xFF);
+            byte three = ((value >> 8) & 0xFF);
+            byte two = ((value >> 16) & 0xFF);
+            byte one = ((value >> 24) & 0xFF);
+
+            // Write each byte to EEPROM
+            EEPROM.write(address, one);
+            EEPROM.write(address + 1, two);
+            EEPROM.write(address + 2, three);
+            EEPROM.write(address + 3, four);
+        }
+        
+        int read_int_from_eeprom(int address)
+        {
+            // Read each byte from EEPROM
+            byte one = EEPROM.read(address);
+            byte two = EEPROM.read(address + 1);
+            byte three = EEPROM.read(address + 2);
+            byte four = EEPROM.read(address + 3);
+
+            // Combine the 4 bytes back into an integer
+            return ((one << 24) + (two << 16) + (three << 8) + four);
+        }
+        void save_settings_to_eeprom()
+        {
+            
+            write_int_to_eeprom(0, setting_0_time_auto_reset_index);
+            write_int_to_eeprom(4, setting_1_brightness);
+            write_int_to_eeprom(8, setting_2_show_default);
+            write_int_to_eeprom(12, setting_3_dark_mode);
+            EEPROM.commit();
+        }
+
+        void load_settings_from_eeprom()
+        {
+            setting_0_time_auto_reset_index = read_int_from_eeprom(0);
+            setting_1_brightness = read_int_from_eeprom(4); 
+            setting_2_show_default = read_int_from_eeprom(8);
+            setting_3_dark_mode = read_int_from_eeprom(12);
+        }
 
         void setValue(String valueStrIn)
         {
@@ -444,6 +495,8 @@ void setup()
     disp.init();
     disp.setBrightness(5);
 
+    EEPROM.begin(512);
+    
     controller = Controller();
 }
 
