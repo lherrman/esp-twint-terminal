@@ -22,6 +22,8 @@ LV_IMG_DECLARE(twint_logo);
 static lv_style_t style_price;
 static lv_style_t style_store;
 
+int setting_show_default_qr_code = 1;
+int setting_show_default_qr_code_old = 1;
 
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
@@ -80,6 +82,11 @@ void generate_qr_code(float price)
         lv_obj_del(qr);
         qr = NULL; // Reset the pointer to NULL
     }
+
+    if ((setting_show_default_qr_code == 0) && (price == 0))
+    {
+        return;
+    }
     qr = lv_qrcode_create(lv_scr_act(), 250, fg_color, bg_color);
     
     /*Set data*/
@@ -132,7 +139,10 @@ void draw()
     lv_obj_add_style(label_store, &style_store, 0);
 
     load_twint_logo();
+
+
     generate_qr_code(currentPrice);
+
 
  }
 
@@ -145,12 +155,16 @@ void clean_all_objects()
 }
 
 void receiveEvent(int bytesReceived) {
+  uint8_t package[5];
   float value;
-  if (bytesReceived == sizeof(value)) {
-    Wire.readBytes((uint8_t*)&value, bytesReceived);
-    // Serial.print("Received value: ");
-    // Serial.println(value);
+  if (bytesReceived == sizeof(package)) {
+    Wire.readBytes((uint8_t*)&package, bytesReceived);
+
+    setting_show_default_qr_code = package[4];
+    memcpy(&value, &package[0], sizeof(value));
+
     nextPrice = value;
+
   }
 }
 
@@ -202,9 +216,13 @@ void loop()
     {
 
         print_free_size();
-
         currentPrice = nextPrice;
         //clean_all_objects();
+        draw();
+    }
+    if (setting_show_default_qr_code != setting_show_default_qr_code_old)
+    {
+        setting_show_default_qr_code_old = setting_show_default_qr_code;
         draw();
     }
 }
