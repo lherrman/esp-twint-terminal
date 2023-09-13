@@ -5,27 +5,33 @@
 
 #include "qrdata.h"
 
-/*Change to your screen resolution*/
-static const uint16_t screenWidth = 320;
-static const uint16_t screenHeight = 480;
+// TFT Display
+static const uint16_t screen_width = 320;
+static const uint16_t screen_height = 480;
+TFT_eSPI tft = TFT_eSPI(screen_width, screen_height); /* TFT instance */
 
+// LVGL Objects
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[screenWidth * 10];
-
-TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
-
-float nextPrice = 0;
-float currentPrice = 0;
-
-LV_IMG_DECLARE(twint_logo);
+static lv_color_t buf[screen_width * 10];
 
 static lv_style_t style_price;
 static lv_style_t style_store;
 
+static lv_obj_t *qr;
+static lv_obj_t *price_label;
+static lv_obj_t *store_label;
+static lv_obj_t *img_logo;
+
+LV_IMG_DECLARE(twint_logo);
+
+// State variables
+float next_price = 0;
+float current_price = 0;
 int setting_show_default_qr_code = 1;
 int setting_show_default_qr_code_old = 1;
 
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+
+void display_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
@@ -38,10 +44,9 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     lv_disp_flush_ready(disp);
 }
 
-
-
-void init_styles()
+void init_lv_objects()
 {
+    // Styles
     lv_style_init(&style_price);
     lv_style_set_text_font(&style_price, &lv_font_montserrat_32);
     lv_style_set_text_color(&style_price, lv_color_hex(0xFFFFFF));
@@ -53,119 +58,113 @@ void init_styles()
     lv_style_set_text_font(&style_store, &lv_font_montserrat_20);
     lv_style_set_text_color(&style_store, lv_color_hex(0x000000));
 
-
-}
-
-void load_twint_logo()
-{
-    /* Create an image object */
-    static lv_obj_t *img_logo = NULL;
-    if (img_logo != NULL)
-    {
-        lv_obj_del(img_logo);
-        img_logo = NULL; // Reset the pointer to NULL
-    }
-    img_logo = lv_img_create( lv_scr_act() );
-    lv_img_set_src(img_logo, &twint_logo);
-    lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 10);
-}
-
-
-void generate_qr_code(float price)
-{
+    // QR Code
     lv_color_t bg_color = lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 5);
     lv_color_t fg_color = lv_color_hex(0x000000);
-
-    static lv_obj_t * qr = NULL;
-    if (qr != NULL)
-    {
-        lv_obj_del(qr);
-        qr = NULL; // Reset the pointer to NULL
-    }
-
-    if ((setting_show_default_qr_code == 0) && (price == 0))
-    {
-        return;
-    }
     qr = lv_qrcode_create(lv_scr_act(), 250, fg_color, bg_color);
-    
-    /*Set data*/
-    const char * data = get_qr_data(price);
-
-    lv_qrcode_update(qr, data, strlen(data));
     lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, 80);
 
-    /*Add a border with bg_color*/
-    lv_obj_set_style_border_color(qr, bg_color, 0);
-    lv_obj_set_style_border_width(qr, 5, 0);
+    // Twint Logo
+    img_logo = lv_img_create(lv_scr_act());
+    lv_img_set_src(img_logo, &twint_logo);
+
+
+    // Price Label
+    price_label = lv_label_create(lv_scr_act());
+    lv_obj_align(price_label, LV_ALIGN_CENTER, 0, 140);
+    lv_obj_add_style(price_label, &style_price, 0);
+
+    // Store Label
+    String store_name = "Pumpkings";
+    store_label = lv_label_create(lv_scr_act());
+    lv_obj_align(store_label, LV_ALIGN_CENTER, 0, 200);
+    lv_obj_add_style(store_label, &style_store, 0);
+    lv_label_set_text(store_label, store_name.c_str());
+
+}
+
+void update_qr_code()
+{
+    // Hide QR code if price is 0 and setting is set to hide default QR code
+    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    {
+        lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);}
+    else{
+        lv_obj_clear_flag(qr, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    // Load data and update QR code
+    const char *data = get_qr_data(current_price);
+    lv_qrcode_update(qr, data, strlen(data));
+}
+
+void update_twint_logo()
+{
+    // Move and resize logo if price is 0 and setting is set to hide default QR code
+    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    {
+        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 10);}
+    else{
+        lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 80);
+    }
+}
+
+void update_price_label()
+{
+    // Update Price Label
+    String price_label_text = String(current_price) + " CHF";
+    lv_label_set_text(price_label, price_label_text.c_str());
+
+    // Hide Price Label if price is 0
+    if (current_price == 0){
+        lv_obj_add_flag(price_label, LV_OBJ_FLAG_HIDDEN);
+    }else{
+        lv_obj_clear_flag(price_label, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+
+void update_store_label()
+{
+    // Update Price Label
+    // Set visibility
+    if (false){
+        lv_obj_add_flag(store_label, LV_OBJ_FLAG_HIDDEN);
+    }else{
+        lv_obj_clear_flag(store_label, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    // Hide QR code if price is 0 and setting is set to hide
+    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    {
+        lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);}
+    else{
+        lv_obj_clear_flag(qr, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void draw()
 {
-    // Create Price Label
-    String price_label = String(currentPrice) + " CHF";
-    
-    static lv_obj_t *label = NULL;
-
-    // Clean up the memory from the previous label
-    if (label != NULL)
-    {
-        lv_obj_del(label);
-        label = NULL; // Reset the pointer to NULL
-    }
-
-    if (currentPrice != 0) 
-    {
-        label = lv_label_create(lv_scr_act());
-        lv_label_set_text(label, price_label.c_str());
-        lv_obj_align(label, LV_ALIGN_CENTER, 0, 140);
-        lv_obj_add_style(label, &style_price, 0);
-    }    
-    
-    // Create Store Name Label
-    String store_name = "Pumpkings";
-    static lv_obj_t *label_store = NULL;
-
-    // Clean up the memory from the previous label
-    if (label_store != NULL)
-    {
-        lv_obj_del(label_store);
-        label_store = NULL; // Reset the pointer to NULL
-    }
-    label_store = lv_label_create(lv_scr_act());
-
-    lv_label_set_text(label_store, store_name.c_str());
-    lv_obj_align(label_store, LV_ALIGN_CENTER, 0, 200);
-    lv_obj_add_style(label_store, &style_store, 0);
-
-    load_twint_logo();
-
-
-    generate_qr_code(currentPrice);
-
-
- }
-
-void clean_all_objects()
-{
-    
-    // Delete all objects
-    lv_obj_clean(lv_scr_act());
-
+    update_price_label();
+    update_store_label();
+    update_qr_code();
 }
 
-void receiveEvent(int bytesReceived) {
-  uint8_t package[5];
-  float value;
-  if (bytesReceived == sizeof(package)) {
-    Wire.readBytes((uint8_t*)&package, bytesReceived);
 
-    setting_show_default_qr_code = package[4];
-    memcpy(&value, &package[0], sizeof(value));
+void receive_event(int bytes_received)
+{
+    // Data format: 4 bytes float + 1 byte setting_show_default_qr_code
+    uint8_t package[5];
+    float value;
+    if (bytes_received == sizeof(package))
+    {
+        Wire.readBytes((uint8_t *)&package, bytes_received);
 
-    nextPrice = value;
+        setting_show_default_qr_code = package[4];
+        memcpy(&value, &package[0], sizeof(value));
 
-  }
+        next_price = value;
+    }
 }
 
 void setup()
@@ -173,34 +172,36 @@ void setup()
     Serial.begin(115200); /* prepare for possible serial debug */
     Serial.println("Starting...");
 
+    // Initialize LVGL
     lv_init();
 
-    tft.begin();        /* TFT init */
+    // Initialize TFT
+    tft.begin();        
     tft.setRotation(0); /* Landscape orientation, flipped */
 
-    lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
+    lv_disp_draw_buf_init(&draw_buf, buf, NULL, screen_width * 10);
 
-    /*Initialize the display*/
+    //Initialize the display
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = screenWidth;
-    disp_drv.ver_res = screenHeight;
-    disp_drv.flush_cb = my_disp_flush;
+    disp_drv.hor_res = screen_width;
+    disp_drv.ver_res = screen_height;
+    disp_drv.flush_cb = display_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
     // Initialize Serial Communication
     uint8_t address = 0x08;
     Wire.begin(address); // address of this ESP32
-    Wire.onReceive(receiveEvent);
+    Wire.onReceive(receive_event);
 
-    init_styles();
+    // Initialize LVGL Objects
+    init_lv_objects();
 
     draw();
-
 }
-void print_free_size(){
-
+void print_free_memory()
+{
     lv_mem_monitor_t mem_mon;
     lv_mem_monitor(&mem_mon);
     Serial.print("free_size = ");
@@ -209,20 +210,15 @@ void print_free_size(){
 
 void loop()
 {
-    lv_timer_handler(); /* let the GUI do its work */
-    //delay(5);
-    // Redraw if price has changed
-    if (nextPrice != currentPrice)
-    {
+    lv_timer_handler();
 
-        print_free_size();
-        currentPrice = nextPrice;
-        //clean_all_objects();
-        draw();
-    }
-    if (setting_show_default_qr_code != setting_show_default_qr_code_old)
+    // Handle screen updates
+    if ((next_price != current_price) ||
+        (setting_show_default_qr_code != setting_show_default_qr_code_old))
     {
+        current_price = next_price;
         setting_show_default_qr_code_old = setting_show_default_qr_code;
+
         draw();
     }
 }
