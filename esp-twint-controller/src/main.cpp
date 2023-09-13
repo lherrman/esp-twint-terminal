@@ -27,10 +27,16 @@ unsigned long current_time;
 
 TM1637 disp(19, 18);
 
-void sendValue(float valueOut)
+void sendValue(float valueOut, int setting_2_show_default = 1)
 {
     Wire.beginTransmission(address);
-    Wire.write((uint8_t *)&valueOut, sizeof(valueOut));
+
+    // create a package to send to the receiver with the value and a setting
+    uint8_t package[5];
+    package[4] = (uint8_t)(setting_2_show_default); // setting
+    memcpy(&package[0], &valueOut, sizeof(valueOut));
+    Wire.write(package, sizeof(package));
+    //Wire.write((uint8_t *)&valueOut, sizeof(valueOut));
 
     Wire.endTransmission();
 }
@@ -126,7 +132,7 @@ class Controller {
             else if (state == State::SETTINGS_MENU)
             {
 
-                int MAX_SETTINGS_MENU_INDEX = 1;
+                int MAX_SETTINGS_MENU_INDEX = 2;
                 if (key ==  '2')
                 {
                     // UP
@@ -185,10 +191,7 @@ class Controller {
                 else if (key == '2')
                 {
                     // UP
-                if (settings_selctor_index > 0)
-                {
                     settings_selctor_index += setting_menu_direction[settings_menu_index];
-                }
                 }
                 else if (key == '8')
                 {
@@ -278,13 +281,7 @@ class Controller {
                     }
 
                     // Clamp selector index
-                    max_index = 4;
-                    if (settings_selctor_index > max_index)
-                    {
-                        settings_selctor_index = max_index;
-                    }
-
-
+                    clamp_settings_selctor_index(0, 4);    
 
                     // Show options
                     int setting_value = setting_0_values[settings_selctor_index];
@@ -317,15 +314,7 @@ class Controller {
                         settings_selctor_index = setting_1_brightness;
                     }
 
-                    max_index = 7;
-                    if (settings_selctor_index > max_index)
-                    {
-                        settings_selctor_index = max_index;
-                    }
-                    else if (settings_selctor_index < 1)
-                    {
-                        settings_selctor_index = 1;
-                    }
+                    clamp_settings_selctor_index(1, 7);    
 
                     disp.setBrightness(settings_selctor_index);
                     String brightness_str = String("Br " + String(settings_selctor_index));
@@ -341,12 +330,7 @@ class Controller {
                         settings_selctor_index = setting_2_show_default;
                     }
                     
-                    // Clamp selector index
-                    max_index = 1;
-                    if (settings_selctor_index > max_index)
-                    {
-                        settings_selctor_index = max_index;
-                    }                    
+                    clamp_settings_selctor_index(0, 1);    
 
                     // Show options
                     if (settings_selctor_index == 0)
@@ -369,7 +353,7 @@ class Controller {
             static unsigned long last_time = 0;
             if (current_time - last_time > 500)
             {
-                sendValue(value);
+                sendValue(value, setting_2_show_default);
                 last_time = current_time;
             }
         }
@@ -381,7 +365,6 @@ class Controller {
 
     private:
 
-
         // State Variables
         State state;
         State last_state;
@@ -391,7 +374,7 @@ class Controller {
         // Settings menu
         int settings_menu_index = 0;
         int settings_selctor_index = 0;
-        int setting_menu_direction[3] = {-1, 1, -1}; // 1 = up, -1 = down
+        int setting_menu_direction[3] = {-1, 1, 1}; // 1 = up, -1 = down
 
         // Settings
         int setting_0_TimeAutoReset_index = 1; 
@@ -403,6 +386,18 @@ class Controller {
         {
             last_time_value_set = millis();
             value = valueStrIn.toFloat();
+        }
+
+        void clamp_settings_selctor_index(int min, int max)
+        {
+            if (settings_selctor_index > max)
+            {
+                settings_selctor_index = max;
+            }
+            else if (settings_selctor_index < min)
+            {
+                settings_selctor_index = min;
+            }
         }
 
 };
