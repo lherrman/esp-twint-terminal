@@ -126,7 +126,7 @@ class Controller {
             else if (state == State::SETTINGS_MENU)
             {
 
-                int MAX_SETTINGS_MENU_INDEX = 1;
+                int MAX_SETTINGS_MENU_INDEX = 2;
                 if (key ==  '2')
                 {
                     // UP
@@ -148,11 +148,7 @@ class Controller {
                     // BACK
                     state = State::IDLE_SHOW_DEFAULT;
                 }
-                else if (key == '#')
-                {
-                    // SELECT
-                }
-                else if (key == '5')
+                else if ((key == '5') || (key == '#'))
                 {
                     // ENTER
                     state = State::INSIDE_SETTING;
@@ -166,7 +162,7 @@ class Controller {
                     settings_selctor_index = 0;
                     state = State::SETTINGS_MENU;
                 }
-                else if (key == '5')
+                else if ((key == '5') || (key == '#'))
                 {
                     // SELECT
 
@@ -178,6 +174,10 @@ class Controller {
                     else if (settings_menu_index == 1)
                     {
                         setting_1_Animation = settings_selctor_index;
+                    }
+                    else if (settings_menu_index == 2)
+                    {
+                        setting_2_brightness = settings_selctor_index;
                     }
 
                     state = State::SETTINGS_MENU;
@@ -213,7 +213,7 @@ class Controller {
             }
             else if (state == State::ENTERING_VALUE)
             {
-                disp.setBrightness(5);
+                disp.setBrightness(setting_2_brightness);
                 int offset = 4 - input_buffer.length();
                 disp.display(input_buffer, true, false, offset);
             }
@@ -221,18 +221,19 @@ class Controller {
             {
 
                 // Reset to idle if set time has passed
-                if (current_time - last_time_value_set > setting_0_values[setting_0_TimeAutoReset_index] * 1000)
+                if ((current_time - last_time_value_set > setting_0_values[setting_0_TimeAutoReset_index] * 1000)
+                    && (setting_0_values[setting_0_TimeAutoReset_index] != 0))
                 {   
                     state = State::IDLE_SHOW_DEFAULT;
                 }
 
-                disp.setBrightness(5);
+                disp.setBrightness(setting_2_brightness);
                 int val = (int)value;
                 disp.display(val);
             }
             else if (state == State::SETTINGS_MENU)
             {
-                disp.setBrightness(5);
+                disp.setBrightness(setting_2_brightness);
    
                 switch (settings_menu_index)
                 {
@@ -253,7 +254,7 @@ class Controller {
 
             else if (state == State::INSIDE_SETTING)
             {
-                disp.setBrightness(5);
+                disp.setBrightness(setting_2_brightness);
                 settings_menu_logic();
             }
 
@@ -310,6 +311,7 @@ class Controller {
                 case 1:{
                     // Idle animation
 
+                    
                     // Clamp selector index
                     max_index = 1;
                     if (settings_selctor_index > max_index)
@@ -330,7 +332,27 @@ class Controller {
                     break;
                 }
                 case 2: {
-                    
+                    // Brightness
+
+                    // On Entry
+                    if (last_state != State::INSIDE_SETTING)
+                    {
+                        settings_selctor_index = setting_2_brightness;
+                    }
+
+                    max_index = 7;
+                    if (settings_selctor_index > max_index)
+                    {
+                        settings_selctor_index = max_index;
+                    }
+                    else if (settings_selctor_index < 1)
+                    {
+                        settings_selctor_index = 1;
+                    }
+
+                    disp.setBrightness(settings_selctor_index);
+                    String brightness_str = String("Br " + String(settings_selctor_index));
+                    disp.display(brightness_str);
                     break;
                 }
             }
@@ -367,6 +389,7 @@ class Controller {
         int setting_0_TimeAutoReset_index = 1; 
         int setting_0_values[5] = {30, 60, 120, 300, 0}; // seconds (0 = never)
         int setting_1_Animation = 0; // 0 = none, 1 = animation 1, 2 = animation 2
+        int setting_2_brightness = 5; // 1-7
 
         void setValue(String valueStrIn)
         {
