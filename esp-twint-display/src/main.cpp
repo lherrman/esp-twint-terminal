@@ -37,8 +37,8 @@ static lv_color_t color_fg_dark = lv_color_hex(0xFFFFFF);
 // Variables
 float next_price = -1;
 float current_price = -1;
-int setting_show_default_qr_code = 1;
-int setting_show_default_qr_code_old = 1;
+int setting_show_default_qr_code = 0;
+int setting_show_default_qr_code_old = 0;
 int setting_dark_mode = 0;
 int setting_dark_mode_old = 0;
 
