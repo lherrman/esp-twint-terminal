@@ -47,10 +47,6 @@ def convert_pdf_to_png(pdf_file_path):
     x1, y1, x2, y2 = 136, 850, 545, 1261
     image = image.crop((x1, y1, x2, y2))
 
-    # # resize image to 320x320 and convert to black and white
-    # image = image.resize((320, 320), Image.NEAREST)
-    # image = image.convert('1')
-
     # Save Image
     if not default_code:
         value = int(value * 100)
@@ -89,14 +85,13 @@ def main():
         key = int(file_name) 
         qrdata = decode(Image.open(img))[0].data.decode('utf-8')
         qr_data[key] = qrdata
-    print('All qr codes read')
-
+    print('All qr codes decoded')
+    
     if qr_data_default == '':
         raise Exception('No default qr code found. Make sure there is a pdf file named default.pdf in the source directory')
 
     # construct the cpp and h files
     function_declaration = 'const char * get_qr_data(float price)'
-
     cpp_file_content = ''
     cpp_file_content += f'{function_declaration}\n'
     cpp_file_content += '{\n'
