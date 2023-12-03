@@ -39,8 +39,8 @@ float next_price = -1;
 float current_price = -1;
 int setting_show_default_qr_code = 0;
 int setting_show_default_qr_code_old = 0;
-int setting_dark_mode = 0;
-int setting_dark_mode_old = 0;
+int setting_dark_mode = 1;
+int setting_dark_mode_old = 1;
 
 // Parameters
 int qr_code_size = 250;
@@ -258,7 +258,7 @@ void setup()
     // Initialize LVGL Objects
     init_lv_objects();
 
-    set_dark_mode(false);
+    set_dark_mode(true);
 
     draw();
 }
