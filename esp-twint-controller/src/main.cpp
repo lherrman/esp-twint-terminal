@@ -224,7 +224,7 @@ class Controller {
             if (state == State::IDLE_SHOW_DEFAULT)
             {
                 value = -1;
-                disp.setBrightness(1);
+                disp.setBrightness(5);
                 idle_animation();
             }
             else if (state == State::ENTERING_VALUE)
