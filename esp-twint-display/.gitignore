@@ -3,4 +3,8 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-qr-code-extractor
+qr-code-extractor/*
+
+*.pdf
+*.png
+
