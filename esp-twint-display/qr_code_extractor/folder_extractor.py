@@ -5,7 +5,7 @@ import shutil
 import glob
 
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
-working_dir = current_file_dir + '/source'
+working_dir = current_file_dir + '/source/folders'
 
 for root, dirs, files in os.walk(working_dir):
     for file in files:
