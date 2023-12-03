@@ -2,6 +2,8 @@
 #
 # Instructions:
 # 1. Put all the pdf files in the source directory (qr_code_extractor/source)
+#    (1.1) If the pdf files are in subdirectories, put them in the source/folders directory
+#          and run the folder_extractor.py script
 # 2. Make sure there is a pdf file named default.pdf in the source directory
 # 3. Run the script
 # 4. The qrdata.cpp and qrdata.h files will automatically be copied to the 
@@ -86,7 +88,7 @@ def main():
         qrdata = decode(Image.open(img))[0].data.decode('utf-8')
         qr_data[key] = qrdata
     print('All qr codes decoded')
-    
+
     if qr_data_default == '':
         raise Exception('No default qr code found. Make sure there is a pdf file named default.pdf in the source directory')
 
