@@ -1,3 +1,14 @@
+# Script to extract qr codes from pdf files and construct the qrdata.cpp and qrdata.h files
+#
+# Instructions:
+# 1. Put all the pdf files in the source directory (qr_code_extractor/source)
+# 2. Make sure there is a pdf file named default.pdf in the source directory
+# 3. Run the script
+# 4. The qrdata.cpp and qrdata.h files will automatically be copied to the 
+#    src directory of the embedded software project (esp-twint-display/src)
+# 5. Upload the embedded software to the esp32 with PlatformIO 
+
+
 import glob
 import os
 import re
