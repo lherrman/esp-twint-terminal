@@ -48,6 +48,9 @@ const char * get_qr_data(float price)
         case 2100:
             return "02:3938f92da41c4c2d87a8e81330bd1227#ced1100cb38d6288136de1eb722f9b18b6b9f2b1#";
              break;
+        case 2200:
+            return "02:6f66e514df54482ea1e2061f5562db1c#567d600eff86425cf77c4f4528de8bcc854f2022#";
+             break;
         case 2300:
             return "02:5e16a020fbec41df8e7f463ba6cc584d#7f944903a96b234618ab8b78dc56835ccd6a2cc7#";
              break;
