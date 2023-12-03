@@ -304,7 +304,7 @@ const char * get_qr_data(float price)
             return "02:9254e40dca404969bf5e48440ebeac4e#5ac1febd28452ae9bf6215213b6122a15a5c08d1#";
              break;
         default:
-            return "02:68fc89929d6348d9aa6d270a1425aa65#928942409ead76410e713bcb7cf3f5bd66edefad#";
+            return "02:5dff699a101a41af9593179033a016dc#ebd8abedc0d3a2839848874766a7022744f4c982#";
             break;
     }
 }
