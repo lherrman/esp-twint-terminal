@@ -5,7 +5,7 @@
 #include <EEPROM.h>
 
 
-float value = 9;
+float value = -1;
 uint8_t address = 8; // address of the receiver ESP32
 
 
@@ -36,7 +36,7 @@ void send_package(float valueOut, int setting_2_show_default = 1, int setting_3_
     // create a package to send to the receiver with the value and a setting
     uint8_t package[6];
     package[4] = (uint8_t)(setting_2_show_default); // setting
-    package[5] = (uint8_t)(setting_3_dark_mode); // setting
+    package[5] = (uint8_t)(setting_3_dark_mode); // setting ! TODO only 1 byte is being sent, need to fix this
     memcpy(&package[0], &valueOut, sizeof(valueOut));
     Wire.write(package, sizeof(package));
     //Wire.write((uint8_t *)&valueOut, sizeof(valueOut));
@@ -223,7 +223,7 @@ class Controller {
 
             if (state == State::IDLE_SHOW_DEFAULT)
             {
-                value = 0;
+                value = -1;
                 disp.setBrightness(1);
                 idle_animation();
             }

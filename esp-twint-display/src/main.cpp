@@ -35,8 +35,8 @@ static lv_color_t color_bg_dark = lv_color_hex(0x000000);
 static lv_color_t color_fg_dark = lv_color_hex(0xFFFFFF);
 
 // Variables
-float next_price = 0;
-float current_price = 0;
+float next_price = -1;
+float current_price = -1;
 int setting_show_default_qr_code = 1;
 int setting_show_default_qr_code_old = 1;
 int setting_dark_mode = 0;
@@ -139,7 +139,7 @@ void set_dark_mode(bool enable)
 void update_qr_code()
 {
     // Hide QR code if price is 0 and setting is set to hide default QR code
-    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    if ((setting_show_default_qr_code == 0) && (current_price == -1))
     {
         lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);}
     else{
@@ -154,7 +154,7 @@ void update_qr_code()
 void update_twint_logo()
 {
     // Move and resize logo if price is 0 and setting is set to hide default QR code
-    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    if ((setting_show_default_qr_code == 0) && ((current_price == -1)))
     {
         lv_img_set_src(img_logo, &logo_large);
         lv_obj_align(img_logo, LV_ALIGN_TOP_MID, 0, 200);
@@ -173,8 +173,8 @@ void update_price_label()
     String price_label_text = String(current_price) + " CHF";
     lv_label_set_text(price_label, price_label_text.c_str());
 
-    // Hide Price Label if price is 0
-    if (current_price == 0){
+    // Hide Price Label if price is -1
+    if ((current_price == -1) || (current_price == 0)){
         lv_obj_add_flag(price_label, LV_OBJ_FLAG_HIDDEN);
     }else{
         lv_obj_clear_flag(price_label, LV_OBJ_FLAG_HIDDEN);
@@ -192,8 +192,8 @@ void update_store_label()
         lv_obj_clear_flag(store_label, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // Hide QR code if price is 0 and setting is set to hide
-    if ((setting_show_default_qr_code == 0) && (current_price == 0))
+    // Hide QR code if price is -1 and setting is set to hide
+    if ((setting_show_default_qr_code == 0) && (current_price == -1))
     {
         lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);}
     else{
